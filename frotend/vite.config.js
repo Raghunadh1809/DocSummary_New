@@ -8,10 +8,27 @@ export default defineConfig({
   server: {
     proxy: {
       "/api": {
-        target: "https://doc-summary-backend.vercel.app/", // or your backend port
+        target: "https://doc-summary-backend.vercel.app/",
         changeOrigin: true,
         secure: false,
       },
     },
+  },
+  // Add build configuration for Vercel
+  build: {
+    outDir: "dist",
+    sourcemap: false,
+    minify: "esbuild",
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ["react", "react-dom"],
+        },
+      },
+    },
+  },
+  // Ensure proper handling of environment variables
+  define: {
+    "process.env": {},
   },
 });
