@@ -40,6 +40,7 @@ export default defineConfig({
     sourcemap: false,
     minify: "esbuild",
   },
+  base: "/",
   // Ensure proper handling of environment variables
   define: {
     "process.env": {},

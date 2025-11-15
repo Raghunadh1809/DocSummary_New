@@ -12,7 +12,7 @@
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "https://doc-summary-backend.vercel.app/api"
+      "dest": "https://doc-summary-backend.vercel.app/api/$1"
     },
     {
       "src": "/(.*)",

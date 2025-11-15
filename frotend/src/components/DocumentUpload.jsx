@@ -25,7 +25,7 @@ const DocumentUpload = ({ onSummaryGenerated, onLoading, onError }) => {
 
       try {
         const uploadResponse = await axios.post(
-          `${API_BASE}/upload`,
+          `https://doc-summary-backend.vercel.app/api/upload`,
           formData,
           {
             headers: { "Content-Type": "multipart/form-data" },

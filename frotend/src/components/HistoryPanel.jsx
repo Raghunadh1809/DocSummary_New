@@ -19,12 +19,15 @@ const HistoryPanel = ({ onSelectSummary }) => {
       setError(null);
       setLoading(true);
 
-      const response = await axios.get(`${API_BASE}/summaries`, {
-        timeout: 5000,
-        validateStatus: function (status) {
-          return status >= 200 && status < 300;
-        },
-      });
+      const response = await axios.get(
+        `https://doc-summary-backend.vercel.app/api/summaries`,
+        {
+          timeout: 5000,
+          validateStatus: function (status) {
+            return status >= 200 && status < 300;
+          },
+        }
+      );
 
       // Check if response is HTML (indicating a wrong response)
       if (
