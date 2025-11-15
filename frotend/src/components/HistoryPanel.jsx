@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 
+const API_BASE = import.meta.env.PROD
+  ? "https://doc-summary-backend.vercel.app/api"
+  : "/api";
+
 const HistoryPanel = ({ onSelectSummary }) => {
   const [summaries, setSummaries] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -15,10 +19,10 @@ const HistoryPanel = ({ onSelectSummary }) => {
       setError(null);
       setLoading(true);
 
-      const response = await axios.get("/api/summaries", {
+      const response = await axios.get(`${API_BASE}/summaries`, {
         timeout: 5000,
         validateStatus: function (status) {
-          return status >= 200 && status < 300; // Only resolve if status code is 2xx
+          return status >= 200 && status < 300;
         },
       });
 

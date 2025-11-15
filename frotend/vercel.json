@@ -12,7 +12,7 @@
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "https://doc-summary-backend.vercel.app/"
+      "dest": "https://doc-summary-backend.vercel.app/api"
     },
     {
       "src": "/(.*)",
@@ -20,5 +20,6 @@
     }
   ],
   "buildCommand": "npm run build",
-  "outputDirectory": "dist"
+  "outputDirectory": "dist",
+  "installCommand": "npm install"
 }

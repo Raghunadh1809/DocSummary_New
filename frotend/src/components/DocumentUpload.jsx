@@ -2,6 +2,10 @@ import React, { useState, useCallback } from "react";
 import { useDropzone } from "react-dropzone";
 import axios from "axios";
 
+const API_BASE = import.meta.env.PROD
+  ? "https://doc-summary-backend.vercel.app/api"
+  : "/api";
+
 const DocumentUpload = ({ onSummaryGenerated, onLoading, onError }) => {
   const [uploadedFile, setUploadedFile] = useState(null);
   const [extractedText, setExtractedText] = useState("");
@@ -20,9 +24,13 @@ const DocumentUpload = ({ onSummaryGenerated, onLoading, onError }) => {
       formData.append("document", file);
 
       try {
-        const uploadResponse = await axios.post("/api/upload", formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
+        const uploadResponse = await axios.post(
+          `${API_BASE}/upload`,
+          formData,
+          {
+            headers: { "Content-Type": "multipart/form-data" },
+          }
+        );
 
         setExtractedText(uploadResponse.data.extractedText);
 
