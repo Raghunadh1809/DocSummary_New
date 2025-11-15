@@ -2,7 +2,7 @@
   "version": 2,
   "builds": [
     {
-      "src": "vite.config.js",
+      "src": "package.json",
       "use": "@vercel/static-build",
       "config": {
         "distDir": "dist"
@@ -11,9 +11,14 @@
   ],
   "routes": [
     {
+      "src": "/api/(.*)",
+      "dest": "https://doc-summary-backend.vercel.app/"
+    },
+    {
       "src": "/(.*)",
       "dest": "/index.html"
     }
   ],
-  "buildCommand": "npm run build"
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist"
 }
