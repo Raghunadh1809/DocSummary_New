@@ -2,14 +2,14 @@ import React, { useState, useCallback } from "react";
 import { useDropzone } from "react-dropzone";
 import axios from "axios";
 
-const API_BASE = import.meta.env.PROD
-  ? "https://doc-summary-backend.vercel.app/api"
-  : "/api";
+// Use environment variable or fallback to direct URL
+const API_BASE =
+  import.meta.env.VITE_API_URL || "https://doc-summary-backend.vercel.app/api";
 
 const DocumentUpload = ({ onSummaryGenerated, onLoading, onError }) => {
   const [uploadedFile, setUploadedFile] = useState(null);
   const [extractedText, setExtractedText] = useState("");
-  const [summaryLength, setSummaryLength] = useState("medium"); // Default to medium
+  const [summaryLength, setSummaryLength] = useState("medium");
 
   const onDrop = useCallback(
     async (acceptedFiles) => {
@@ -24,33 +24,52 @@ const DocumentUpload = ({ onSummaryGenerated, onLoading, onError }) => {
       formData.append("document", file);
 
       try {
+        // Upload document
         const uploadResponse = await axios.post(
           `${API_BASE}/upload`,
           formData,
           {
             headers: { "Content-Type": "multipart/form-data" },
+            timeout: 30000, // 30 second timeout
           }
         );
 
         setExtractedText(uploadResponse.data.extractedText);
 
-        // Generate summary immediately after upload with current length selection
-        const summaryResponse = await axios.post("/api/summarize", {
-          text: uploadResponse.data.extractedText,
-          length: summaryLength, // Use the current state value
-          filename: uploadResponse.data.filename,
-          originalName: uploadResponse.data.originalName,
-          fileType: uploadResponse.data.fileType,
-        });
+        // Generate summary
+        const summaryResponse = await axios.post(
+          `${API_BASE}/summarize`,
+          {
+            text: uploadResponse.data.extractedText,
+            length: summaryLength,
+            filename: uploadResponse.data.filename,
+            originalName: uploadResponse.data.originalName,
+            fileType: uploadResponse.data.fileType,
+          },
+          {
+            timeout: 30000,
+          }
+        );
 
         onSummaryGenerated(summaryResponse.data);
       } catch (error) {
-        onError(error.response?.data?.error || "Failed to process document");
+        console.error("Upload error:", error);
+        if (error.code === "ECONNABORTED") {
+          onError("Request timeout. Please try again.");
+        } else if (error.response?.data?.error) {
+          onError(error.response.data.error);
+        } else if (error.message.includes("Network Error")) {
+          onError(
+            "Cannot connect to server. Please check your internet connection and ensure the backend is running."
+          );
+        } else {
+          onError("Failed to process document. Please try again.");
+        }
       } finally {
         onLoading(false);
       }
     },
-    [onSummaryGenerated, onLoading, onError, summaryLength] // Include summaryLength in dependencies
+    [onSummaryGenerated, onLoading, onError, summaryLength]
   );
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -60,6 +79,7 @@ const DocumentUpload = ({ onSummaryGenerated, onLoading, onError }) => {
       "image/*": [".jpeg", ".jpg", ".png"],
     },
     maxFiles: 1,
+    maxSize: 10 * 1024 * 1024, // 10MB
   });
 
   return (
@@ -110,7 +130,6 @@ const DocumentUpload = ({ onSummaryGenerated, onLoading, onError }) => {
           )}
         </div>
 
-        {/* Animated background effect */}
         <div
           className="
           absolute inset-0 rounded-2xl bg-linear-to-r from-blue-500/0 to-purple-500/0 
@@ -120,7 +139,6 @@ const DocumentUpload = ({ onSummaryGenerated, onLoading, onError }) => {
         ></div>
       </div>
 
-      {/* Summary length selector - show even before upload */}
       <div className="mt-6 animate-slide-down">
         <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-200/50">
           <div className="summary-controls">
@@ -138,7 +156,7 @@ const DocumentUpload = ({ onSummaryGenerated, onLoading, onError }) => {
               "
             >
               <option value="short">Short (2-3 Paragraphs)</option>
-              <option value="medium">Medium (4-6) Paragraphs</option>
+              <option value="medium">Medium (4-6 Paragraphs)</option>
               <option value="long">Long (7-9 Paragraphs)</option>
             </select>
             <p className="text-xs text-gray-500 mt-2">

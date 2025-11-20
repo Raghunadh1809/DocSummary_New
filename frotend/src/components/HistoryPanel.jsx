@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 
-const API_BASE = import.meta.env.PROD
-  ? "https://doc-summary-backend.vercel.app/api"
-  : "/api";
+// Use environment variable or fallback to direct URL
+const API_BASE =
+  import.meta.env.VITE_API_URL || "https://doc-summary-backend.vercel.app/api";
 
 const HistoryPanel = ({ onSelectSummary }) => {
   const [summaries, setSummaries] = useState([]);
@@ -20,56 +20,22 @@ const HistoryPanel = ({ onSelectSummary }) => {
       setLoading(true);
 
       const response = await axios.get(`${API_BASE}/summaries`, {
-        timeout: 5000,
-        validateStatus: function (status) {
-          return status >= 200 && status < 300;
-        },
+        timeout: 10000,
       });
 
-      // Check if response is HTML (indicating a wrong response)
-      if (
-        typeof response.data === "string" &&
-        response.data.includes("<!DOCTYPE html>")
-      ) {
-        throw new Error("Backend server not responding properly");
-      }
-
-      // Ensure we always have an array
       const summariesData = response.data?.data || response.data || [];
-
-      if (Array.isArray(summariesData)) {
-        setSummaries(summariesData);
-      } else {
-        console.warn("Unexpected response format:", summariesData);
-        setSummaries([]);
-        setError("Unexpected data format from server");
-      }
+      setSummaries(Array.isArray(summariesData) ? summariesData : []);
     } catch (error) {
       console.error("Failed to fetch summaries:", error);
-
-      if (error.code === "ECONNREFUSED") {
-        setError("Backend server is not running. Please start the server.");
-      } else if (
-        error.message.includes("Backend server not responding properly")
-      ) {
-        setError(
-          "Backend server returned incorrect response. Check server configuration."
-        );
-      } else if (error.response) {
-        setError(`Server error: ${error.response.status}`);
-      } else {
-        setError(
-          "Failed to connect to server. Please check if the backend is running."
-        );
-      }
-
+      setError(
+        "Failed to load history. Please check if the backend is running."
+      );
       setSummaries([]);
     } finally {
       setLoading(false);
     }
   };
 
-  // Loading state
   if (loading) {
     return (
       <div className="history-panel bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-200/50 p-6 animate-fade-in">
@@ -82,7 +48,6 @@ const HistoryPanel = ({ onSelectSummary }) => {
     );
   }
 
-  // Error state
   if (error) {
     return (
       <div className="history-panel bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-200/50 p-6 animate-fade-in">
@@ -103,20 +68,12 @@ const HistoryPanel = ({ onSelectSummary }) => {
           </div>
           <p className="text-red-600 mb-2 font-medium">Connection Error</p>
           <p className="text-gray-600 text-sm mb-4">{error}</p>
-          <div className="space-x-2">
-            <button
-              onClick={fetchSummaries}
-              className="bg-blue-500 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-600 transition-colors duration-200"
-            >
-              Retry
-            </button>
-            <button
-              onClick={() => setError(null)}
-              className="bg-gray-500 text-white px-4 py-2 rounded-lg font-medium hover:bg-gray-600 transition-colors duration-200"
-            >
-              Dismiss
-            </button>
-          </div>
+          <button
+            onClick={fetchSummaries}
+            className="bg-blue-500 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-600 transition-colors duration-200"
+          >
+            Retry
+          </button>
         </div>
       </div>
     );
